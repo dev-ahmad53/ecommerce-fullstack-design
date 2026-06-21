@@ -3,31 +3,11 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // ============================================================
-    // 1. PRODUCT DATA
+    // 1. PRODUCT DATA - DYNAMIC FROM API
     // ============================================================
     
-    const allProducts = [
-        { id: 'shop-1', brand: 'Apple', feature: 'Metallic', rating: 7.5, stars: 4, price: 99.50, originalPrice: 1128.00, orders: 154, freeShipping: true, img: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300&auto=format&fit=crop&q=80', desc: 'Latest flagship smartphone in striking red color.' },
-        { id: 'shop-2', brand: 'Apple', feature: 'Metallic', rating: 5.9, stars: 3, price: 99.50, originalPrice: 1128.00, orders: 154, freeShipping: true, img: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300&auto=format&fit=crop&q=80', desc: 'Premium smartphone in deep ocean blue.' },
-        { id: 'shop-3', brand: 'Poco', feature: 'Plastic cover', rating: 7.5, stars: 4, price: 99.50, originalPrice: null, orders: 154, freeShipping: true, img: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300&auto=format&fit=crop&q=80', desc: 'High performance gaming phone.' },
-        { id: 'shop-4', brand: 'Samsung', feature: 'Plastic cover', rating: 7.5, stars: 4, price: 99.50, originalPrice: 1128.00, orders: 154, freeShipping: true, img: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?w=300&auto=format&fit=crop&q=80', desc: 'Slim high-definition tablet.' },
-        { id: 'shop-5', brand: 'Samsung', feature: 'Metallic', rating: 7.5, stars: 4, price: 99.50, originalPrice: 1128.00, orders: 154, freeShipping: true, img: 'https://images.unsplash.com/photo-1516035069371-29a1b244cc32?w=300&auto=format&fit=crop&q=80', desc: 'High performance DSLR camera.' },
-        { id: 'shop-6', brand: 'Apple', feature: 'Metallic', rating: 7.5, stars: 4, price: 99.50, originalPrice: null, orders: 154, freeShipping: true, img: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300&auto=format&fit=crop&q=80', desc: 'Super lightweight design smartphone.' },
-        { id: 'shop-7', brand: 'Apple', feature: 'Metallic', rating: 7.5, stars: 4, price: 99.50, originalPrice: 1128.00, orders: 154, freeShipping: true, img: 'https://images.unsplash.com/photo-1496181130204-7552cc14f1d0?w=300&auto=format&fit=crop&q=80', desc: 'Ultra thin productivity laptop.' },
-        { id: 'shop-8', brand: 'Poco', feature: 'Super power', rating: 7.5, stars: 4, price: 99.50, originalPrice: 1128.00, orders: 154, freeShipping: true, img: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&auto=format&fit=crop&q=80', desc: 'Rugged smart sports watch.' },
-        { id: 'shop-9', brand: 'Apple', feature: 'Metallic', rating: 7.5, stars: 4, price: 99.50, originalPrice: null, orders: 154, freeShipping: true, img: 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300&auto=format&fit=crop&q=80', desc: 'High performance smart smartphone.' }
-    ];
-
-    const youMayAlsoLike = [
-        { id: 'rec-5', name: 'Premium Casual Backpack', price: 10.30, img: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=300&auto=format&fit=crop&q=80', desc: 'Solid Backpack blue jeans large size' },
-        { id: 'el-4', name: 'Elegant Smart Watch Gold', price: 10.30, img: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&auto=format&fit=crop&q=80', desc: 'T-shirts with multiple colors, for men' },
-        { id: 'ho-1', name: 'Premium Soft Chair', price: 10.30, img: 'https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?w=300&auto=format&fit=crop&q=80', desc: 'Soft comfy chairs for home or room' }
-    ];
-
-    // ============================================================
-    // 2. STATE MANAGEMENT
-    // ============================================================
-    
+    let allProducts = [];
+    let isLoading = true;
     let isMobile = window.innerWidth <= 700;
     let currentLayout = isMobile ? 'list' : 'grid';
     let currentPage = 1;
@@ -43,12 +23,63 @@ document.addEventListener('DOMContentLoaded', () => {
         verifiedOnly: false
     };
 
+    // You may also like - Static data
+    const youMayAlsoLike = [
+        { id: 'rec-5', name: 'Premium Casual Backpack', price: 10.30, img: 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=300&auto=format&fit=crop&q=80', desc: 'Solid Backpack blue jeans large size' },
+        { id: 'el-4', name: 'Elegant Smart Watch Gold', price: 10.30, img: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=300&auto=format&fit=crop&q=80', desc: 'T-shirts with multiple colors, for men' },
+        { id: 'ho-1', name: 'Premium Soft Chair', price: 10.30, img: 'https://images.unsplash.com/photo-1567538096630-e0c55bd6374c?w=300&auto=format&fit=crop&q=80', desc: 'Soft comfy chairs for home or room' }
+    ];
+
+    // ============================================================
+    // 2. FETCH PRODUCTS FROM API
+    // ============================================================
+    
+    async function fetchProducts() {
+        try {
+            const response = await fetch('/api/products');
+            if (!response.ok) throw new Error('Failed to fetch');
+            allProducts = await response.json();
+            isLoading = false;
+            
+            // Map API products to match frontend structure
+            allProducts = allProducts.map(product => ({
+                id: 'shop-' + product.id,
+                brand: product.category || 'Generic',
+                feature: 'Standard',
+                rating: 4.5,
+                stars: 4,
+                price: parseFloat(product.price),
+                originalPrice: parseFloat(product.price) * 1.2 || null,
+                orders: Math.floor(Math.random() * 200) + 50,
+                freeShipping: Math.random() > 0.5,
+                img: product.image || 'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=300&auto=format&fit=crop&q=80',
+                desc: product.description || 'Great product!',
+                name: product.name,
+                category: product.category
+            }));
+            
+            syncFiltersFromInputs();
+            renderProducts();
+            updateProductCount(allProducts.length);
+        } catch (error) {
+            console.error('Error fetching products:', error);
+            isLoading = false;
+            document.getElementById('shopProductsContainer').innerHTML = `
+                <div style="text-align:center;padding:40px;color:red;">
+                    <h3>Failed to load products</h3>
+                    <p>Please refresh the page</p>
+                </div>
+            `;
+        }
+    }
+
     // ============================================================
     // 3. HELPER FUNCTIONS
     // ============================================================
     
     function showToast(message, type = 'success') {
         const toastContainer = document.getElementById('toastContainer');
+        if (!toastContainer) return;
         const toast = document.createElement('div');
         toast.className = `toast ${type}`;
         toast.innerHTML = `<span>${message}</span>`;
@@ -57,6 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function filterProducts() {
+        if (isLoading) return [];
         return allProducts.filter(product => {
             if (activeFilters.brands.length > 0 && !activeFilters.brands.includes(product.brand)) return false;
             if (activeFilters.features.length > 0 && !activeFilters.features.includes(product.feature)) return false;
@@ -86,10 +118,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // ============================================================
-    // 4. RENDER PRODUCTS (WITH PAGE CLICK)
+    // 4. RENDER PRODUCTS
     // ============================================================
     
     function renderProducts() {
+        if (isLoading) {
+            document.getElementById('shopProductsContainer').innerHTML = 
+                `<div style="text-align:center;padding:40px;">Loading products...</div>`;
+            return;
+        }
+        
         let filtered = filterProducts();
         updateProductCount(filtered.length);
         
@@ -109,7 +147,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const originalPriceHTML = product.originalPrice ? `<span class="shop-price-original">$${product.originalPrice.toFixed(2)}</span>` : '';
             const freeShippingHTML = (product.freeShipping && currentLayout === 'list') ? `<p class="free-shipping-tag">Free Shipping</p>` : '';
             const ordersHTML = currentLayout === 'list' ? `<span class="list-orders-meta">${product.orders} orders</span>` : '';
-            const title = currentLayout === 'list' ? 'Regular Fit Resort Shirt' : 'GoPro HERO6 4K Action Camera';
+            const title = currentLayout === 'list' ? product.name : product.name;
             
             return `
                 <div class="shop-product-card" data-id="${product.id}" onclick="window.location.href='/product/${product.id}'" style="cursor:pointer;">
@@ -159,7 +197,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // ============================================================
-    // 5. LAYOUT SWITCHING (Auto + Manual)
+    // 5. LAYOUT SWITCHING
     // ============================================================
     
     function applyLayoutToContainer() {
@@ -353,7 +391,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             cart.push({
                 id: productId,
-                name: product.brand + ' Device',
+                name: product.name || product.brand + ' Device',
                 price: product.price,
                 img: product.img,
                 quantity: 1
@@ -363,7 +401,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('brand_cart', JSON.stringify(cart));
         updateCartCount();
         renderCart();
-        showToast(`Added "${product.brand} Device" to cart!`);
+        showToast(`Added "${product.name}" to cart!`);
     }
     
     function removeFromCart(productId) {
@@ -427,14 +465,21 @@ document.addEventListener('DOMContentLoaded', () => {
         renderProducts();
     });
     
-    // Cart toggle
+    // ============================================================
+    // CART - DIRECT TO CART PAGE
+    // ============================================================
+    
     document.getElementById('cartToggleBtn')?.addEventListener('click', (e) => {
         e.preventDefault();
-        document.getElementById('cartDrawer')?.classList.add('open');
-        document.getElementById('cartOverlay').style.display = 'block';
-        document.body.style.overflow = 'hidden';
+        window.location.href = '/cart';
     });
     
+    document.getElementById('mobileCartToggleBtn')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        window.location.href = '/cart';
+    });
+    
+    // Close cart drawer (kept for compatibility)
     document.getElementById('cartCloseBtn')?.addEventListener('click', () => {
         document.getElementById('cartDrawer')?.classList.remove('open');
         document.getElementById('cartOverlay').style.display = 'none';
@@ -566,45 +611,52 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
     }
     
-    // Search functionality
-    const searchInput = document.getElementById('searchInput');
-    const searchSuggestions = document.getElementById('searchSuggestions');
+// Search functionality - Dynamic from API
+const searchInput = document.getElementById('searchInput');
+const searchSuggestions = document.getElementById('searchSuggestions');
+
+searchInput?.addEventListener('input', async function() {
+    const query = this.value.toLowerCase().trim();
+    if (!query) {
+        if (searchSuggestions) searchSuggestions.style.display = 'none';
+        return;
+    }
     
-    searchInput?.addEventListener('input', function() {
-        const query = this.value.toLowerCase().trim();
-        if (!query) {
-            if (searchSuggestions) searchSuggestions.style.display = 'none';
-            return;
-        }
+    try {
+        // API route use karo - `/api/products/search/query`
+        const response = await fetch(`/api/products/search/${encodeURIComponent(query)}`);
+        const matches = await response.json();
         
-        const matches = allProducts.filter(p => p.brand.toLowerCase().includes(query) || p.desc.toLowerCase().includes(query));
         if (searchSuggestions) {
             if (matches.length === 0) {
-                searchSuggestions.innerHTML = `<div class="suggestion-item">No results found</div>`;
+                searchSuggestions.innerHTML = `<div class="suggestion-item">No results found for "${query}"</div>`;
             } else {
                 searchSuggestions.innerHTML = matches.slice(0, 5).map(prod => `
-                    <div class="suggestion-item" data-id="${prod.id}">
-                        <img class="suggestion-thumb" src="${prod.img}" alt="${prod.brand}">
-                        <span>${prod.brand} Device</span>
+                    <div class="suggestion-item" data-id="shop-${prod.id}">
+                        <img class="suggestion-thumb" src="${prod.image}" alt="${prod.name}">
+                        <span>${prod.name}</span>
                     </div>
                 `).join('');
             }
             searchSuggestions.style.display = 'block';
         }
-    });
-    
-    searchSuggestions?.addEventListener('click', (e) => {
-        const item = e.target.closest('.suggestion-item');
-        if (item && item.dataset.id) {
-            window.location.href = `/product/${item.dataset.id}`;
-        }
-    });
-    
-    document.addEventListener('click', (e) => {
-        if (searchInput && !searchInput.contains(e.target) && searchSuggestions && !searchSuggestions.contains(e.target)) {
-            searchSuggestions.style.display = 'none';
-        }
-    });
+    } catch (error) {
+        console.error('Search error:', error);
+    }
+});
+
+searchSuggestions?.addEventListener('click', (e) => {
+    const item = e.target.closest('.suggestion-item');
+    if (item && item.dataset.id) {
+        window.location.href = `/product/${item.dataset.id}`;
+    }
+});
+
+document.addEventListener('click', (e) => {
+    if (searchInput && !searchInput.contains(e.target) && searchSuggestions && !searchSuggestions.contains(e.target)) {
+        searchSuggestions.style.display = 'none';
+    }
+});
     
     // ============================================================
     // 9. INITIALIZE
@@ -634,8 +686,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
     
-    // Initial load
-    syncFiltersFromInputs();
+    // Initial load - Fetch products from API
+    fetchProducts();
+    
+    // Cart initialization
     updateCartCount();
     renderCart();
     checkWidthAndSetLayout();

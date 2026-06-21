@@ -63,6 +63,11 @@
                 </div>
             </div>
 
+            <!-- Add to Cart Button -->
+            <button class="btn btn-primary btn-lg w-100" id="addToCartBtn" style="padding: 12px; font-size: 18px; font-weight: 600; border-radius: 8px;">
+                <i class="fas fa-shopping-cart"></i> Add to Cart
+            </button>
+
             <!-- Specifications -->
             <table class="specifications-table">
                 <tr><td class="spec-label">Price:</td><td class="spec-value" style="color: var(--badge-red);">Negotiable</td></tr>

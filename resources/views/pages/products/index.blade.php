@@ -263,5 +263,8 @@
 @endsection
 
 @push('scripts')
+    <script>
+        window.apiUrl = '{{ url('/api/products') }}';
+    </script>
     <script src="{{ asset('js/products.js') }}"></script>
 @endpush
